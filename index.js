@@ -1,0 +1,79 @@
+import express from "express";
+import dotenv from "dotenv";
+import connectDB from "./config/db.js";
+import authRoutes from "./routes/authRoutes.js";
+import courseRoutes from "./routes/courseRoutes.js";
+import blogRoutes from "./routes/blogRoutes.js";
+import eventRoutes from "./routes/eventRoutes.js";
+import bannerRoutes from "./routes/bannerRoutes.js";
+import bookRoutes from "./routes/bookRoutes.js";
+import aboutRoutes from "./routes/aboutRoutes.js";
+import cartRoutes from "./routes/cartRoutes.js";
+import ticketRoutes from "./routes/ticketroutes.js";
+import adminRoutes from "./routes/adminRoute.js";
+import contactRoutes from "./routes/contactRoutes.js";
+import podcastRoutes from "./routes/podcastRoutes.js";
+import instructorRoutes from "./routes/instructorRoutes.js";
+import numerologyRoutes from "./routes/numerologyRoutes.js";
+import logout from "./routes/logOut.js";
+import currentUser from "./routes/currentUser.js";
+import cookieParser from "cookie-parser";
+import path from "path";
+import cors from "cors";
+import http from "http";
+import { initializeSocket } from "./utils/socket.js";
+import chatRouter from "./routes/chat.js";
+import forumRoutes from "./routes/forumRoutes.js";
+
+dotenv.config();
+
+const app = express();
+
+app.use(cookieParser());
+app.use(express.json());
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173", // local dev frontend
+      process.env.CLIENT_URL, // deployed frontend
+    ], // Froned URL, * for any url
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE"],
+  })
+);
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+
+const PORT = process.env.PORT || 3000;
+
+connectDB();
+// test route
+app.get("/", (req, res) => {
+  res.send("Server is Active");
+});
+
+app.use("/api/auth", authRoutes);
+app.use("/api/courses", courseRoutes);
+app.use("/api/blogs", blogRoutes);
+app.use("/api/events", eventRoutes);
+app.use("/api/banners", bannerRoutes);
+app.use("/api/books", bookRoutes);
+app.use("/api/about", aboutRoutes);
+app.use("/api/cart", cartRoutes);
+app.use("/api/ticket", ticketRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/contact", contactRoutes);
+app.use("/api/chats", chatRouter);
+app.use("/api/podcasts", podcastRoutes);
+app.use("/api/instructors", instructorRoutes);
+app.use("/api/numerology", numerologyRoutes);
+app.use("/api/logout", logout);
+app.use("/api/me", currentUser);
+app.use("/api/forums", forumRoutes);
+
+const server = http.createServer(app);
+const io = initializeSocket(server);
+
+// start server
+server.listen(PORT, () => {
+  console.log(`Server is running at http://localhost:${PORT}`);
+});
