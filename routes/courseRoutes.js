@@ -9,28 +9,27 @@ import { adminMiddleware } from "../middlewares/adminAuthMiddleware.js";
 const router = Router();
 
 router.post(
-  "/",
-  adminMiddleware,
-  upload.fields([
-    { name: "image", maxCount: 1 },
-    { name: "videos", maxCount: 20 },
-  ]),
-  createCourse
+	"/",
+	adminMiddleware,
+	upload.fields([
+		{ name: "image", maxCount: 1 },
+		{ name: "videos", maxCount: 20 },
+	]),
+	createCourse
 );
 
 router.get("/", getCourses);
 router.get("/:id", getCourseById);
 
-router.put(
-  "/edit/:id",
-  adminMiddleware,
-  upload.fields([
-    { name: "image", maxCount: 1 },
-    { name: "videos", maxCount: 20 },
-  ]),
-  editCourse
-);
+const uploadCourseAssets = upload.fields([
+	{ name: "image", maxCount: 1 },
+	{ name: "videos", maxCount: 20 },
+]);
+
+router.put("/edit/:id", adminMiddleware, uploadCourseAssets, editCourse);
+router.put("/:id", adminMiddleware, uploadCourseAssets, editCourse);
 
 router.delete("/delete/:id", adminMiddleware, deleteCourse);
+router.delete("/:id", adminMiddleware, deleteCourse);
 
 export default router;

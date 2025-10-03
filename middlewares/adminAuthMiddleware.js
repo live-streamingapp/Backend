@@ -1,31 +1,44 @@
 import jwt from "jsonwebtoken";
+import User from "../model/UserModel.js";
 
-export const adminMiddleware = (req, res, next) => {
-  try {
-    const token = req.cookies?.token;
-    if (!token) {
-      return res
-        .status(401)
-        .json({ success: false, message: "Not authenticated" });
-    }
+export const adminMiddleware = async (req, res, next) => {
+	try {
+		const token = req.cookies?.token;
+		if (!token) {
+			return res
+				.status(401)
+				.json({ success: false, message: "Not authenticated" });
+		}
 
-    // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+		// Verify token
+		const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Ensure token belongs to the hardcoded admin
-    if (decoded.role !== "admin" || decoded.email !== process.env.ADMIN_EMAIL) {
-      return res
-        .status(403)
-        .json({ success: false, message: "Access denied: Admins only" });
-    }
+		// Fetch user from database to verify role
+		const user = await User.findById(decoded.id).select("-password");
 
-    // Attach admin info (optional)
-    req.admin = { email: decoded.email, role: decoded.role };
+		if (!user) {
+			return res
+				.status(404)
+				.json({ success: false, message: "User not found" });
+		}
 
-    next();
-  } catch (err) {
-    res
-      .status(401)
-      .json({ success: false, message: "Invalid or expired token" });
-  }
+		// Verify this is an admin or astrologer user
+		if (user.role !== "admin" && user.role !== "astrologer") {
+			return res
+				.status(403)
+				.json({
+					success: false,
+					message: "Access denied: Admins/Astrologers only",
+				});
+		}
+
+		// Attach user info
+		req.user = user;
+
+		next();
+	} catch (err) {
+		res
+			.status(401)
+			.json({ success: false, message: "Invalid or expired token" });
+	}
 };

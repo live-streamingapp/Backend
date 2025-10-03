@@ -2,92 +2,106 @@ import Book from "../../model/BookModel.js";
 import cloudinary from "../../config/cloudinary.js";
 
 const streamUpload = (buffer, folder = "books") => {
-  return new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
-      { folder, resource_type: "image" },
-      (error, result) => {
-        if (result) resolve(result);
-        else reject(error);
-      }
-    );
-    stream.end(buffer);
-  });
+	return new Promise((resolve, reject) => {
+		const stream = cloudinary.uploader.upload_stream(
+			{ folder, resource_type: "image" },
+			(error, result) => {
+				if (result) resolve(result);
+				else reject(error);
+			}
+		);
+		stream.end(buffer);
+	});
 };
 
 export const createBook = async (req, res) => {
-  try {
-    // Handle cover image upload to Cloudinary
-    let coverImageUrl = null;
-    let coverPublicId = null;
+	try {
+		let body = req.body ?? {};
+		if (req.body?.payload) {
+			try {
+				body = JSON.parse(req.body.payload);
+			} catch (error) {
+				return res.status(400).json({
+					status: false,
+					code: 400,
+					message: "Invalid book payload provided.",
+					error: error.message,
+				});
+			}
+		}
 
-    if (req.file && req.file.buffer) {
-      const result = await streamUpload(req.file.buffer, "books");
-      coverImageUrl = result.secure_url;
-      coverPublicId = result.public_id;
-    }
+		// Handle cover image upload to Cloudinary
+		let coverImageUrl = null;
+		let coverPublicId = null;
 
-    // Parse nested objects/arrays from FormData
-    let languageOptions = [];
-    let highlights = {};
-    let keyFeatures = [];
-    let targetAudience = [];
+		if (req.file && req.file.buffer) {
+			const result = await streamUpload(req.file.buffer, "books");
+			coverImageUrl = result.secure_url;
+			coverPublicId = result.public_id;
+		}
 
-    if (req.body.languageOptions) {
-      languageOptions =
-        typeof req.body.languageOptions === "string"
-          ? JSON.parse(req.body.languageOptions)
-          : req.body.languageOptions;
-    }
+		// Parse nested objects/arrays from FormData
+		let languageOptions = [];
+		let highlights = {};
+		let keyFeatures = [];
+		let targetAudience = [];
 
-    if (req.body.highlights) {
-      highlights =
-        typeof req.body.highlights === "string"
-          ? JSON.parse(req.body.highlights)
-          : req.body.highlights;
-    }
+		if (body.languageOptions) {
+			languageOptions =
+				typeof body.languageOptions === "string"
+					? JSON.parse(body.languageOptions)
+					: body.languageOptions;
+		}
 
-    if (req.body.keyFeatures) {
-      keyFeatures =
-        typeof req.body.keyFeatures === "string"
-          ? JSON.parse(req.body.keyFeatures)
-          : req.body.keyFeatures;
-    }
+		if (body.highlights) {
+			highlights =
+				typeof body.highlights === "string"
+					? JSON.parse(body.highlights)
+					: body.highlights;
+		}
 
-    if (req.body.targetAudience) {
-      targetAudience =
-        typeof req.body.targetAudience === "string"
-          ? JSON.parse(req.body.targetAudience)
-          : req.body.targetAudience;
-    }
+		if (body.keyFeatures) {
+			keyFeatures =
+				typeof body.keyFeatures === "string"
+					? JSON.parse(body.keyFeatures)
+					: body.keyFeatures;
+		}
 
-    const newBook = new Book({
-      title: req.body.title,
-      description: req.body.description,
-      price: req.body.price,
-      stock: req.body.stock,
-      languageOptions,
-      highlights,
-      keyFeatures,
-      targetAudience,
-      coverImage: coverImageUrl,
-      cloudinary_id: coverPublicId,
-    });
+		if (body.targetAudience) {
+			targetAudience =
+				typeof body.targetAudience === "string"
+					? JSON.parse(body.targetAudience)
+					: body.targetAudience;
+		}
 
-    await newBook.save();
+		const newBook = new Book({
+			title: body.title,
+			description: body.description,
+			price: body.price,
+			stock: body.stock,
+			languageOptions,
+			highlights,
+			keyFeatures,
+			targetAudience,
+			coverImage: coverImageUrl,
+			cloudinaryImageId: coverPublicId,
+		});
 
-    res.status(201).json({
-      status: true,
-      code: 201,
-      message: "Book created successfully",
-      data: newBook,
-    });
-  } catch (error) {
-    console.error("Error creating book:", error);
-    res.status(500).json({
-      status: false,
-      code: 500,
-      message: "Error creating book",
-      error: error.message,
-    });
-  }
+		await newBook.save();
+
+		res.status(201).json({
+			status: true,
+			code: 201,
+			message: "Book created successfully",
+			data: newBook,
+		});
+	} catch (error) {
+		console.error("Error creating book:", error);
+		res.status(500).json({
+			status: false,
+			code: 500,
+			message: "Error creating book",
+			error: error.message,
+		});
+	}
 };
