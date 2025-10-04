@@ -39,6 +39,7 @@ app.use(
 	cors({
 		origin: [
 			"http://localhost:5173", // local dev frontend
+			"https://103bec500c90.ngrok-free.app",
 			process.env.CLIENT_URL, // deployed frontend
 		], // Froned URL, * for any url
 		credentials: true,
