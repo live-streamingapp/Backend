@@ -63,4 +63,54 @@ router.get("/:courseId/messages", authMiddleware, async (req, res) => {
 	}
 });
 
+router.post("/:courseId/messages", authMiddleware, async (req, res) => {
+	try {
+		const userId = req.user?._id;
+		const { courseId } = req.params;
+		const { message } = req.body;
+
+		if (!userId || !courseId) {
+			return res
+				.status(400)
+				.json({ message: "User ID and Course ID are required." });
+		}
+
+		if (!message || !message.trim()) {
+			return res.status(400).json({ message: "Message cannot be empty." });
+		}
+
+		const user = await User.findById(userId);
+		if (!user) return res.status(404).json({ message: "User not found." });
+
+		if (!user.enrolledCourses.map((id) => id.toString()).includes(courseId)) {
+			return res
+				.status(403)
+				.json({ message: "You are not enrolled in this course." });
+		}
+
+		let forum = await Forum.findOne({ courseId });
+		if (!forum) {
+			forum = new Forum({ courseId, messages: [] });
+		}
+
+		forum.messages.push({
+			sender: userId,
+			message: message.trim(),
+		});
+
+		await forum.save();
+
+		// Populate the sender info for the response
+		await forum.populate("messages.sender", "name");
+
+		return res.status(201).json({
+			message: "Message sent successfully",
+			data: forum.messages[forum.messages.length - 1],
+		});
+	} catch (err) {
+		console.error("Error sending forum message:", err);
+		return res.status(500).json({ message: "Server error" });
+	}
+});
+
 export default router;

@@ -2,9 +2,11 @@ import { Router } from "express";
 import upload from "../middlewares/upload.js";
 import { createCourse } from "../controllers/Course/CreateCourse.js";
 import { getCourseById, getCourses } from "../controllers/Course/GetCourses.js";
+import { getEnrolledCourses } from "../controllers/Course/GetEnrolledCourses.js";
 import { editCourse } from "../controllers/Course/EditCourse.js";
 import { deleteCourse } from "../controllers/Course/DeleteCourse.js";
 import { adminMiddleware } from "../middlewares/adminAuthMiddleware.js";
+import { authMiddleware } from "../middlewares/authMiddleware.js";
 
 const router = Router();
 
@@ -19,6 +21,7 @@ router.post(
 );
 
 router.get("/", getCourses);
+router.get("/enrolled", authMiddleware, getEnrolledCourses);
 router.get("/:id", getCourseById);
 
 const uploadCourseAssets = upload.fields([

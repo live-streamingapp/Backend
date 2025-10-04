@@ -15,6 +15,9 @@ import contactRoutes from "./routes/contactRoutes.js";
 import podcastRoutes from "./routes/podcastRoutes.js";
 import instructorRoutes from "./routes/instructorRoutes.js";
 import numerologyRoutes from "./routes/numerologyRoutes.js";
+import consultationRoutes from "./routes/consultationRoutes.js";
+import productOrderRoutes from "./routes/productOrderRoutes.js";
+import productRoutes from "./routes/productRoutes.js";
 import logout from "./routes/logOut.js";
 import currentUser from "./routes/currentUser.js";
 import cookieParser from "cookie-parser";
@@ -24,6 +27,7 @@ import http from "http";
 import { initializeSocket } from "./utils/socket.js";
 import chatRouter from "./routes/chat.js";
 import forumRoutes from "./routes/forumRoutes.js";
+import notificationRoutes from "./routes/notificationRoutes.js";
 
 dotenv.config();
 
@@ -32,14 +36,14 @@ const app = express();
 app.use(cookieParser());
 app.use(express.json());
 app.use(
-  cors({
-    origin: [
-      "http://localhost:5173", // local dev frontend
-      process.env.CLIENT_URL, // deployed frontend
-    ], // Froned URL, * for any url
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE"],
-  })
+	cors({
+		origin: [
+			"http://localhost:5173", // local dev frontend
+			process.env.CLIENT_URL, // deployed frontend
+		], // Froned URL, * for any url
+		credentials: true,
+		methods: ["GET", "POST", "PUT", "DELETE"],
+	})
 );
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
@@ -48,7 +52,7 @@ const PORT = process.env.PORT || 3000;
 connectDB();
 // test route
 app.get("/", (req, res) => {
-  res.send("Server is Active");
+	res.send("Server is Active");
 });
 
 app.use("/api/auth", authRoutes);
@@ -66,14 +70,18 @@ app.use("/api/chats", chatRouter);
 app.use("/api/podcasts", podcastRoutes);
 app.use("/api/instructors", instructorRoutes);
 app.use("/api/numerology", numerologyRoutes);
+app.use("/api/consultations", consultationRoutes);
+app.use("/api/product-orders", productOrderRoutes);
+app.use("/api/products", productRoutes);
 app.use("/api/logout", logout);
 app.use("/api/me", currentUser);
 app.use("/api/forums", forumRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 const server = http.createServer(app);
 const io = initializeSocket(server);
 
 // start server
 server.listen(PORT, () => {
-  console.log(`Server is running at http://localhost:${PORT}`);
+	console.log(`Server is running at http://localhost:${PORT}`);
 });

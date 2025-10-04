@@ -11,6 +11,7 @@ const studentReportSchema = new Schema(
 			enum: ["Basic", "Silver", "Gold", "Platinum", "Mid", "Advanced"],
 			default: "Basic",
 		},
+		fileUrl: { type: String, trim: true },
 		downloadedAt: { type: Date, default: Date.now },
 		uploadedBy: { type: String, required: true, trim: true },
 	},

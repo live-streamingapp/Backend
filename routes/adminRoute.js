@@ -3,6 +3,12 @@ import { getUsers } from "../controllers/Admin/getUsers.js";
 import { getStudentReports } from "../controllers/Admin/getStudentReports.js";
 import { getStudentBookings } from "../controllers/Admin/getStudentBookings.js";
 import { getStudentProgress } from "../controllers/Admin/getStudentProgress.js";
+import {
+	getCustomers,
+	getCustomerById,
+	updateCustomer,
+} from "../controllers/Admin/getCustomers.js";
+import { getCustomerOrders } from "../controllers/Admin/getCustomerOrders.js";
 import { adminMiddleware } from "../middlewares/adminAuthMiddleware.js";
 
 const router = express.Router();
@@ -13,5 +19,11 @@ router.get("/users", adminMiddleware, getUsers);
 router.get("/students/reports", adminMiddleware, getStudentReports);
 router.get("/students/bookings", adminMiddleware, getStudentBookings);
 router.get("/students/progress", adminMiddleware, getStudentProgress);
+
+// Customer management routes
+router.get("/customers", adminMiddleware, getCustomers);
+router.get("/customers/orders", adminMiddleware, getCustomerOrders);
+router.get("/customers/:id", adminMiddleware, getCustomerById);
+router.put("/customers/:id", adminMiddleware, updateCustomer);
 
 export default router;

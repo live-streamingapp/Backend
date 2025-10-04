@@ -2,7 +2,15 @@ import StudentBooking from "../../model/StudentBookingModel.js";
 
 export const getStudentBookings = async (req, res, next) => {
 	try {
-		const bookings = await StudentBooking.find()
+		const { studentId } = req.query;
+
+		// Build filter object
+		const filter = {};
+		if (studentId) {
+			filter.student = studentId;
+		}
+
+		const bookings = await StudentBooking.find(filter)
 			.populate({
 				path: "student",
 				select: "name email phone",

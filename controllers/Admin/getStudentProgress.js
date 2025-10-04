@@ -2,7 +2,15 @@ import StudentProgress from "../../model/StudentProgressModel.js";
 
 export const getStudentProgress = async (req, res, next) => {
 	try {
-		const progressEntries = await StudentProgress.find()
+		const { studentId } = req.query;
+
+		// Build filter object
+		const filter = {};
+		if (studentId) {
+			filter.student = studentId;
+		}
+
+		const progressEntries = await StudentProgress.find(filter)
 			.populate({
 				path: "student",
 				select: "name email phone createdAt",
