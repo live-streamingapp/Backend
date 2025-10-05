@@ -44,6 +44,7 @@ const seedAll = async () => {
 			"scripts/seedConsultationData.js",
 			"Step 5: Seeding Consultation Data"
 		);
+		await runScript("scripts/seedTickets.js", "Step 6: Seeding Event Tickets");
 
 		const endTime = Date.now();
 		const duration = ((endTime - startTime) / 1000).toFixed(2);
@@ -79,6 +80,7 @@ const seedAll = async () => {
 		console.log("   • Customers created: 10 users");
 		console.log("   • Orders generated: 20-40 orders");
 		console.log("   • Reports created: 20-40 reports");
+		console.log("   • Event Tickets: 20 tickets across 13 events");
 		console.log("\n");
 
 		process.exit(0);

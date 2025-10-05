@@ -11,6 +11,7 @@
 		"seed:products": "node scripts/seedProducts.js",
 		"seed:customers": "node scripts/seedCustomersAndOrders.js",
 		"seed:reports": "node scripts/seedStudentReports.js",
+		"seed:tickets": "node scripts/seedTickets.js",
 		"seed:all": "node scripts/seedAll.js"
 	},
 	"author": "Alpixn pvt ltd",
