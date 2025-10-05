@@ -33,18 +33,22 @@ const seedAll = async () => {
 		await runScript("scripts/seedAdminData.js", "Step 1: Seeding Admin Users");
 		await runScript("scripts/seedProducts.js", "Step 2: Seeding Products");
 		await runScript(
+			"scripts/seedServices.js",
+			"Step 3: Seeding Services (Consultations & Packages)"
+		);
+		await runScript(
 			"scripts/seedCustomersAndOrders.js",
-			"Step 3: Seeding Customers & Orders"
+			"Step 4: Seeding Customers & Orders"
 		);
 		await runScript(
 			"scripts/seedStudentReports.js",
-			"Step 4: Seeding Student Reports"
+			"Step 5: Seeding Student Reports"
 		);
 		await runScript(
 			"scripts/seedConsultationData.js",
-			"Step 5: Seeding Consultation Data"
+			"Step 6: Seeding Consultation Data"
 		);
-		await runScript("scripts/seedTickets.js", "Step 6: Seeding Event Tickets");
+		await runScript("scripts/seedTickets.js", "Step 7: Seeding Event Tickets");
 
 		const endTime = Date.now();
 		const duration = ((endTime - startTime) / 1000).toFixed(2);
@@ -77,6 +81,9 @@ const seedAll = async () => {
 		console.log("   • Customer Email: rajesh.kumar@example.com");
 		console.log("   • Password (all): password123");
 		console.log("\n   • Products seeded: 8 items");
+		console.log(
+			"   • Services seeded: 12 items (4 consultations + 8 packages)"
+		);
 		console.log("   • Customers created: 10 users");
 		console.log("   • Orders generated: 20-40 orders");
 		console.log("   • Reports created: 20-40 reports");

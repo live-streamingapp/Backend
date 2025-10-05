@@ -40,6 +40,9 @@ export const editCourse = async (req, res) => {
 
 		const updates = normaliseCoursePayload(payload);
 
+		// Don't allow updating createdBy field - it should remain the original creator
+		delete updates.createdBy;
+
 		if (req.files?.image?.[0]?.buffer) {
 			const result = await uploadToCloudinary(
 				req.files.image[0].buffer,

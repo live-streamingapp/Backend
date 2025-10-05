@@ -40,6 +40,11 @@ export const createCourse = async (req, res) => {
 
 		const courseData = normaliseCoursePayload(coursePayload);
 
+		// Set createdBy from authenticated admin user
+		if (req.user?._id) {
+			courseData.createdBy = req.user._id;
+		}
+
 		// 1️⃣ Upload course image if exists
 		if (req.files?.image?.[0]?.buffer) {
 			const result = await uploadToCloudinary(

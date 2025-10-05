@@ -26,6 +26,16 @@ const ensureCourse = async (payload) => {
 const seed = async () => {
 	await connectDB();
 
+	// Ensure admin user exists
+	const admin = await ensureUser({
+		name: "Admin",
+		email: "admin@astro.com",
+		phone: "9999999999",
+		dob: { day: 1, month: 1, year: 1990 },
+		password: "password123",
+		role: "astrologer",
+	});
+
 	const studentOne = await ensureUser({
 		name: "Aditi R. Sharma",
 		email: "aditi.sharma@example.com",

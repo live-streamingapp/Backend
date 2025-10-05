@@ -26,6 +26,7 @@ const bookSchema = new mongoose.Schema(
 		targetAudience: [{ type: String }],
 
 		price: { type: Number },
+		pages: { type: Number }, // Number of pages in the book
 		coverImage: { type: String },
 		cloudinaryImageId: { type: String },
 

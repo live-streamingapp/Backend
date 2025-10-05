@@ -33,6 +33,12 @@ const parseNumber = (value) => {
 export const normaliseCoursePayload = (rawPayload = {}) => {
 	const payload = { ...rawPayload };
 
+	// Remove createdBy from payload if it's empty or invalid
+	// It should be set from req.user in the controller
+	if (!payload.createdBy || payload.createdBy === "") {
+		delete payload.createdBy;
+	}
+
 	payload.languages = ensureArrayOfStrings(payload.languages);
 	payload.subtitles = ensureArrayOfStrings(payload.subtitles);
 	payload.whatYouWillLearn = ensureArrayOfStrings(payload.whatYouWillLearn);
