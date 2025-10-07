@@ -47,18 +47,28 @@ router.get("/:courseId/messages", authMiddleware, async (req, res) => {
 		}
 		const user = await User.findById(userId);
 		if (!user) return res.status(404).json({ message: "User not found." });
-		if (!user.enrolledCourses.map((id) => id.toString()).includes(courseId)) {
+
+		// Allow access for admin/astrologer OR enrolled students
+		const isAdminOrAstrologer =
+			user.role === "admin" || user.role === "astrologer";
+		const isEnrolledStudent = user.enrolledCourses
+			.map((id) => id.toString())
+			.includes(courseId);
+
+		if (!isAdminOrAstrologer && !isEnrolledStudent) {
 			return res
 				.status(403)
-				.json({ message: "You are not enrolled in this course." });
+				.json({ message: "You don't have access to this course forum." });
 		}
+
 		const forum = await Forum.findOne({ courseId }).populate(
 			"messages.sender",
 			"name"
 		);
-		if (!forum) return res.status(404).json({ message: "Forum not found." });
+		if (!forum) return res.status(200).json({ messages: [] });
 		return res.status(200).json({ messages: forum.messages });
 	} catch (err) {
+		console.error("Error fetching forum messages:", err);
 		return res.status(500).json({ message: "Server error" });
 	}
 });
@@ -82,10 +92,17 @@ router.post("/:courseId/messages", authMiddleware, async (req, res) => {
 		const user = await User.findById(userId);
 		if (!user) return res.status(404).json({ message: "User not found." });
 
-		if (!user.enrolledCourses.map((id) => id.toString()).includes(courseId)) {
+		// Allow access for admin/astrologer OR enrolled students
+		const isAdminOrAstrologer =
+			user.role === "admin" || user.role === "astrologer";
+		const isEnrolledStudent = user.enrolledCourses
+			.map((id) => id.toString())
+			.includes(courseId);
+
+		if (!isAdminOrAstrologer && !isEnrolledStudent) {
 			return res
 				.status(403)
-				.json({ message: "You are not enrolled in this course." });
+				.json({ message: "You don't have access to this course forum." });
 		}
 
 		let forum = await Forum.findOne({ courseId });
