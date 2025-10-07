@@ -81,6 +81,9 @@ export const addProduct = async (req, res) => {
 				items: [cartItem],
 			});
 		} else {
+			// Filter out corrupted cart items (items without itemId or itemType)
+			cart.items = cart.items.filter((item) => item.itemId && item.itemType);
+
 			// Check if item exists
 			const itemIndex = cart.items.findIndex(
 				(item) =>

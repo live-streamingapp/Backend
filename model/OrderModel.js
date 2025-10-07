@@ -63,7 +63,6 @@ const orderSchema = new mongoose.Schema(
 	{
 		orderNumber: {
 			type: String,
-			required: true,
 			unique: true,
 		},
 		user: {
@@ -87,7 +86,7 @@ const orderSchema = new mongoose.Schema(
 		// Payment information
 		paymentMethod: {
 			type: String,
-			enum: ["card", "upi", "netbanking", "wallet", "cod"],
+			enum: ["card", "upi", "netbanking", "wallet", "cod", "pending"],
 		},
 		paymentStatus: {
 			type: String,

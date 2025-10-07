@@ -9,6 +9,7 @@ import {
 	updateOrderStatus,
 	updatePaymentStatus,
 } from "../controllers/Order/UpdateOrder.js";
+import { enrollCoursesFromPaidOrders } from "../controllers/Order/EnrollCoursesFromPaidOrders.js";
 import { authMiddleware } from "../middlewares/authMiddleware.js";
 import { adminMiddleware } from "../middlewares/adminAuthMiddleware.js";
 
@@ -23,5 +24,12 @@ router.get("/:id", authMiddleware, getOrderById);
 router.get("/", adminMiddleware, getOrders);
 router.put("/:id/status", adminMiddleware, updateOrderStatus);
 router.put("/:id/payment", adminMiddleware, updatePaymentStatus);
+
+// Utility route - enroll users from existing paid orders (admin only)
+router.post(
+	"/utility/enroll-courses",
+	adminMiddleware,
+	enrollCoursesFromPaidOrders
+);
 
 export default router;

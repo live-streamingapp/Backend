@@ -34,6 +34,10 @@ const userSchema = new mongoose.Schema(
 			enum: ["student", "astrologer", "admin"], // astrologer is the single admin who manages content
 			default: "student",
 		},
+		profileImage: {
+			type: String,
+			default: null,
+		},
 		enrolledCourses: [{ type: mongoose.Schema.Types.ObjectId, ref: "Course" }], // Array of enrolled course IDs
 		resetPasswordToken: { type: String },
 		resetPasswordExpire: { type: Date },

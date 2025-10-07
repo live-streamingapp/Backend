@@ -12,13 +12,15 @@ export const createOrder = async (req, res) => {
 			items, // Array of {itemId, itemType, quantity, scheduledDate, scheduledTime}
 			shippingAddress,
 			paymentMethod,
+			paymentStatus = "pending", // Default to pending
 			notes,
 		} = req.body;
 
-		if (!items || items.length === 0) {
+		if (!items || !Array.isArray(items) || items.length === 0) {
 			return res.status(400).json({
 				success: false,
-				message: "No items provided",
+				message:
+					"No items provided for order. Please add items to your cart first.",
 			});
 		}
 
@@ -30,7 +32,10 @@ export const createOrder = async (req, res) => {
 			let itemData;
 			let itemModel;
 
-			switch (item.itemType) {
+			// Normalize itemType to lowercase for comparison
+			const itemType = item.itemType?.toLowerCase();
+
+			switch (itemType) {
 				case "course":
 					itemData = await Course.findById(item.itemId).populate("instructor");
 					itemModel = "Course";
@@ -48,7 +53,10 @@ export const createOrder = async (req, res) => {
 					itemModel = "Service";
 					break;
 				default:
-					continue;
+					return res.status(400).json({
+						success: false,
+						message: `Invalid item type: ${item.itemType}. Supported types are: Course, Book, Package, Service`,
+					});
 			}
 
 			if (!itemData) {
@@ -59,7 +67,7 @@ export const createOrder = async (req, res) => {
 			}
 
 			const orderItem = {
-				itemType: item.itemType,
+				itemType: itemType, // Use normalized lowercase value
 				itemId: item.itemId,
 				itemModel,
 				title: itemData.title || itemData.name,
@@ -69,19 +77,19 @@ export const createOrder = async (req, res) => {
 			};
 
 			// Add type-specific details
-			if (item.itemType === "course") {
+			if (itemType === "course") {
 				orderItem.courseDetails = {
 					duration: itemData.duration,
 					lessons: itemData.lessons,
 					instructor: itemData.instructor?._id,
 				};
-			} else if (item.itemType === "book") {
+			} else if (itemType === "book") {
 				orderItem.bookDetails = {
 					author: itemData.author,
 					isbn: itemData.isbn,
 					pages: itemData.pages,
 				};
-			} else if (item.itemType === "package") {
+			} else if (itemType === "package") {
 				orderItem.packageDetails = {
 					consultationType: itemData.type,
 					duration: itemData.duration,
@@ -89,7 +97,7 @@ export const createOrder = async (req, res) => {
 					scheduledDate: item.scheduledDate,
 					scheduledTime: item.scheduledTime,
 				};
-			} else if (item.itemType === "service") {
+			} else if (itemType === "service") {
 				orderItem.serviceDetails = {
 					serviceType: itemData.serviceType,
 					deliveryTime: itemData.deliveryTime,
@@ -108,6 +116,7 @@ export const createOrder = async (req, res) => {
 			totalAmount,
 			shippingAddress,
 			paymentMethod,
+			paymentStatus, // Include payment status
 			notes,
 			statusHistory: [
 				{

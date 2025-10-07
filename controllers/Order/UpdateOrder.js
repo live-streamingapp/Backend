@@ -1,4 +1,5 @@
 import Order from "../../model/OrderModel.js";
+import User from "../../model/UserModel.js";
 
 export const updateOrderStatus = async (req, res) => {
 	try {
@@ -45,6 +46,9 @@ export const updateOrderStatus = async (req, res) => {
 
 		if (status === "completed") {
 			updateData.deliveredAt = new Date();
+
+			// Add purchased courses to user's enrolledCourses
+			await enrollCoursesFromOrder(order);
 		}
 
 		Object.assign(order, updateData);
@@ -81,7 +85,9 @@ export const updatePaymentStatus = async (req, res) => {
 
 		const updateData = { paymentStatus };
 		if (transactionId) updateData.transactionId = transactionId;
-		if (paymentStatus === "paid") updateData.paidAt = new Date();
+		if (paymentStatus === "paid") {
+			updateData.paidAt = new Date();
+		}
 
 		const order = await Order.findByIdAndUpdate(id, updateData, {
 			new: true,
@@ -92,6 +98,11 @@ export const updatePaymentStatus = async (req, res) => {
 				success: false,
 				message: "Order not found",
 			});
+		}
+
+		// When payment is marked as paid, enroll user in courses
+		if (paymentStatus === "paid") {
+			await enrollCoursesFromOrder(order);
 		}
 
 		res.status(200).json({
@@ -108,3 +119,41 @@ export const updatePaymentStatus = async (req, res) => {
 		});
 	}
 };
+
+// Helper function to enroll user in purchased courses
+async function enrollCoursesFromOrder(order) {
+	try {
+		// Find all course items in the order
+		const courseItems = order.items.filter(
+			(item) => item.itemType === "course"
+		);
+
+		if (courseItems.length === 0) {
+			return; // No courses in this order
+		}
+
+		// Get user
+		const user = await User.findById(order.user);
+		if (!user) {
+			console.error("User not found for order:", order._id);
+			return;
+		}
+
+		// Add course IDs to enrolledCourses (avoid duplicates)
+		const courseIds = courseItems.map((item) => item.itemId.toString());
+		const enrolledIds = user.enrolledCourses.map((id) => id.toString());
+
+		const newCourses = courseIds.filter((id) => !enrolledIds.includes(id));
+
+		if (newCourses.length > 0) {
+			user.enrolledCourses.push(...newCourses);
+			await user.save();
+			console.log(
+				`Enrolled user ${user._id} in ${newCourses.length} course(s)`
+			);
+		}
+	} catch (error) {
+		console.error("Error enrolling courses from order:", error);
+		// Don't throw - we don't want to break the order update
+	}
+}
