@@ -65,8 +65,36 @@ const options = {
               items: { type: "string" },
               example: ["60d5ec49f1b2c8b1f8c8e8e8"],
             },
+            resetPasswordToken: { type: "string" },
+            resetPasswordExpire: { type: "string", format: "date-time" },
             createdAt: { type: "string", format: "date-time" },
             updatedAt: { type: "string", format: "date-time" },
+          },
+        },
+        PendingRegistration: {
+          type: "object",
+          properties: {
+            _id: { type: "string", example: "60d5ec49f1b2c8b1f8c8e8e8" },
+            name: { type: "string", example: "John Doe" },
+            email: { type: "string", example: "john@example.com" },
+            phone: { type: "string", example: "+1234567890" },
+            dob: {
+              type: "object",
+              properties: {
+                day: { type: "number", example: 15 },
+                month: { type: "number", example: 8 },
+                year: { type: "number", example: 1990 },
+              },
+            },
+            password: { type: "string", description: "Hashed password" },
+            role: {
+              type: "string",
+              enum: ["student", "astrologer"],
+              example: "student",
+            },
+            otp: { type: "string", example: "123456" },
+            otpExpire: { type: "string", format: "date-time" },
+            createdAt: { type: "string", format: "date-time" },
           },
         },
         Course: {

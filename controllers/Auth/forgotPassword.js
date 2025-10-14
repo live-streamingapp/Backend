@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import User from "../../model/UserModel.js";
-import nodemailer from "nodemailer";
+import { sendPasswordResetEmail } from "../../utils/emailService.js";
 
 export const forgotPassword = async (req, res) => {
   try {
@@ -22,34 +22,14 @@ export const forgotPassword = async (req, res) => {
       .createHash("sha256")
       .update(resetToken)
       .digest("hex");
-    user.resetPasswordExpire = Date.now() + 10 * 60 * 1000; // 10 min
+    user.resetPasswordExpire = Date.now() + 60 * 60 * 1000; // 1 hour
     await user.save();
 
     // Reset URL
     const resetUrl = `${process.env.CLIENT_URL}/auth/reset-password?token=${resetToken}`;
 
-    // Setup transporter
-    const transporter = nodemailer.createTransport({
-      service: "SendGrid",
-      auth: {
-        user: "apikey", // SendGrid requires literal string "apikey"
-        pass: process.env.SENDGRID_API_KEY,
-      },
-    });
-
-    const mailOptions = {
-      from: `Support <${process.env.SENDGRID_EMAIL_USER}>`,
-      to: user.email,
-      subject: "Password Reset Request",
-      html: `
-        <p>You requested a password reset.</p>
-        <p><a href="${resetUrl}" target="_blank">Click here to reset your password</a></p>
-        <p>This link will expire in 10 minutes.</p>
-      `,
-    };
-
     try {
-      await transporter.sendMail(mailOptions);
+      await sendPasswordResetEmail(user.email, user.name, resetUrl);
       return res.status(200).json({
         status: true,
         code: 200,
@@ -59,10 +39,15 @@ export const forgotPassword = async (req, res) => {
       });
     } catch (mailError) {
       console.error("Email sending failed:", mailError);
+      // Remove reset token if email fails
+      user.resetPasswordToken = undefined;
+      user.resetPasswordExpire = undefined;
+      await user.save();
+
       return res.status(500).json({
         status: false,
         code: 500,
-        message: "Email could not be sent",
+        message: "Failed to send password reset email. Please try again.",
         error: mailError.message,
       });
     }
