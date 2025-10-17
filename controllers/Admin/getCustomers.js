@@ -1,11 +1,11 @@
 import User from "../../model/UserModel.js";
-import ProductOrder from "../../model/ProductOrderModel.js";
+import Order from "../../model/OrderModel.js";
 
 // Get all customers (users who have made purchases)
 export const getCustomers = async (req, res) => {
 	try {
 		// Find all distinct user IDs from orders
-		const customerIds = await ProductOrder.find().distinct("customer.userId");
+		const customerIds = await Order.find().distinct("userId");
 
 		const customers = await User.find({
 			_id: { $in: customerIds },
@@ -47,8 +47,9 @@ export const getCustomerById = async (req, res) => {
 		}
 
 		// Get customer's orders
-		const orders = await ProductOrder.find({ "customer.userId": id })
-			.populate("product.productId")
+		const orders = await Order.find({ userId: id })
+			.populate("items.courseId")
+			.populate("items.serviceId")
 			.sort({ createdAt: -1 });
 
 		res.status(200).json({

@@ -3,8 +3,7 @@ import mongoose from "mongoose";
 import connectDB from "../config/db.js";
 import User from "../model/UserModel.js";
 import Course from "../model/CourseModel.js";
-import StudentReport from "../model/StudentReportModel.js";
-import StudentBooking from "../model/StudentBookingModel.js";
+import Order from "../model/OrderModel.js";
 import StudentProgress from "../model/StudentProgressModel.js";
 
 const ensureUser = async (payload) => {
@@ -74,53 +73,49 @@ const seed = async () => {
 
 	// Clear existing admin seed collections to avoid duplicates
 	await Promise.all([
-		StudentReport.deleteMany({}),
-		StudentBooking.deleteMany({}),
+		Order.deleteMany({ type: "booking" }),
 		StudentProgress.deleteMany({}),
 	]);
 
-	await StudentReport.insertMany([
+	// Create orders with booking data (replacing StudentBooking)
+	await Order.insertMany([
 		{
-			student: studentOne._id,
-			report: "Kundali Analysis",
-			level: "Gold",
-			downloadedAt: new Date("2025-07-10"),
-			uploadedBy: "Astrologer Deepak",
-		},
-		{
-			student: studentTwo._id,
-			report: "Numerology Blueprint",
-			level: "Silver",
-			downloadedAt: new Date("2025-07-08"),
-			uploadedBy: "Astrologer Preeti",
-		},
-	]);
-
-	await StudentBooking.insertMany([
-		{
-			student: studentOne._id,
-			course: courseOne._id,
+			userId: studentOne._id,
+			type: "booking",
+			status: "completed",
+			totalAmount: 799,
+			items: [
+				{
+					courseId: courseOne._id,
+					quantity: 1,
+					price: 799,
+				},
+			],
+			paymentStatus: "paid",
 			sessionDate: new Date("2025-07-11"),
 			sessionTime: "18:00",
 			astrologerName: "Rajeev Malhotra",
-			paymentAmount: 799,
-			payoutAmount: 799,
-			paymentStatus: "Paid",
-			avatar: "/images/aditi.png",
 		},
 		{
-			student: studentTwo._id,
-			course: courseOne._id,
+			userId: studentTwo._id,
+			type: "booking",
+			status: "completed",
+			totalAmount: 899,
+			items: [
+				{
+					courseId: courseOne._id,
+					quantity: 1,
+					price: 899,
+				},
+			],
+			paymentStatus: "paid",
 			sessionDate: new Date("2025-08-05"),
 			sessionTime: "16:30",
 			astrologerName: "Priya Sharma",
-			paymentAmount: 899,
-			payoutAmount: 899,
-			paymentStatus: "Paid",
-			avatar: "/images/aditi.png",
 		},
 	]);
 
+	// Create student progress with integrated report functionality
 	await StudentProgress.insertMany([
 		{
 			student: studentOne._id,
@@ -132,6 +127,11 @@ const seed = async () => {
 			progressPercent: 78,
 			status: "On Track",
 			avatar: "/images/aditi.png",
+			reportGenerated: true,
+			reportUrl: "/reports/aditi-kundali-analysis.pdf",
+			reportTitle: "Kundali Analysis",
+			reportLevel: "Gold",
+			reportUploadedBy: "Astrologer Deepak",
 			timeline: [
 				{ label: "Week 1", value: 45 },
 				{ label: "Week 2", value: 60 },
@@ -151,6 +151,11 @@ const seed = async () => {
 			progressPercent: 66,
 			status: "On Track",
 			avatar: "/images/aditi.png",
+			reportGenerated: true,
+			reportUrl: "/reports/rahul-numerology-blueprint.pdf",
+			reportTitle: "Numerology Blueprint",
+			reportLevel: "Silver",
+			reportUploadedBy: "Astrologer Preeti",
 			timeline: [
 				{ label: "Week 1", value: 30 },
 				{ label: "Week 2", value: 45 },

@@ -29,6 +29,7 @@ const notificationSchema = new mongoose.Schema(
 				"warning",
 				"error",
 				"course",
+				"session",
 				"payment",
 				"enquiry",
 				"registration",

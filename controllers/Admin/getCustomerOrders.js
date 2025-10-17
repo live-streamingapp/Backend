@@ -1,20 +1,24 @@
-import ProductOrder from "../../model/ProductOrderModel.js";
+import Order from "../../model/OrderModel.js";
 
 // Get all orders for customer management view
 export const getCustomerOrders = async (req, res) => {
 	try {
 		const { customerId } = req.query;
 
-		const filter = customerId ? { "customer.userId": customerId } : {};
+		const filter = customerId ? { userId: customerId } : {};
 
-		const orders = await ProductOrder.find(filter)
+		const orders = await Order.find(filter)
 			.populate({
-				path: "customer.userId",
+				path: "userId",
 				select: "name email phone",
 			})
 			.populate({
-				path: "product.productId",
-				select: "title price images",
+				path: "items.courseId",
+				select: "title price image",
+			})
+			.populate({
+				path: "items.serviceId",
+				select: "title price image",
 			})
 			.sort({ createdAt: -1 });
 

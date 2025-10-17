@@ -22,11 +22,31 @@ const orderItemSchema = new mongoose.Schema({
 	quantity: { type: Number, default: 1 },
 	image: { type: String },
 
-	// Course-specific
+	// Course-specific (enhanced to replace StudentBookingModel)
 	courseDetails: {
 		duration: Number,
 		lessons: Number,
 		instructor: { type: mongoose.Schema.Types.ObjectId, ref: "Instructor" },
+		// 🆕 Student Booking fields (migrated from StudentBookingModel)
+		sessionDate: Date,
+		sessionTime: String,
+		astrologerName: String,
+		payoutAmount: Number,
+		isBooking: { type: Boolean, default: false }, // Identifies if this is a booking vs purchase
+		bookingStatus: {
+			type: String,
+			enum: ["Scheduled", "Completed", "Cancelled", "Rescheduled"],
+		},
+		meetingLink: String,
+		// 🆕 Progress tracking (replaces PurchasedCourseModel)
+		progress: { type: Number, default: 0, min: 0, max: 100 },
+		progressTracker: {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: "StudentProgress",
+		},
+		purchasedAt: { type: Date, default: Date.now },
+		lastAccessedAt: Date,
+		completedAt: Date,
 	},
 
 	// Book-specific

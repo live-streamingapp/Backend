@@ -8,10 +8,7 @@
 		"dev": "nodemon index.js",
 		"start": "node index.js",
 		"seed:admin": "node scripts/seedAdminData.js",
-		"seed:products": "node scripts/seedProducts.js",
 		"seed:services": "node scripts/seedServices.js",
-		"seed:customers": "node scripts/seedCustomersAndOrders.js",
-		"seed:reports": "node scripts/seedStudentReports.js",
 		"seed:tickets": "node scripts/seedTickets.js",
 		"seed:all": "node scripts/seedAll.js"
 	},
@@ -19,6 +16,7 @@
 	"license": "ISC",
 	"description": "",
 	"dependencies": {
+		"agora-access-token": "^2.0.4",
 		"axios": "^1.11.0",
 		"bcrypt": "^6.0.0",
 		"bcryptjs": "^3.0.2",

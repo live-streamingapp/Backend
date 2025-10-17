@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import Consultation from "../model/ConsultationModel.js";
-import ProductOrder from "../model/ProductOrderModel.js";
+// import Order from "../model/OrderModel.js"; // No longer seeding product orders as products are discontinued
 import connectDB from "../config/db.js";
 
 dotenv.config();
@@ -340,17 +340,13 @@ const seedData = async () => {
 
 		console.log("🗑️  Clearing existing data...");
 		await Consultation.deleteMany({});
-		await ProductOrder.deleteMany({});
+		// Note: Product orders no longer seeded as products are discontinued
 
 		console.log("📝 Seeding Consultation data...");
 		const consultations = await Consultation.insertMany(consultationData);
 		console.log(`✅ ${consultations.length} consultations created`);
 
-		console.log("📝 Seeding Product Order data...");
-		const orders = await ProductOrder.insertMany(productOrderData);
-		console.log(`✅ ${orders.length} product orders created`);
-
-		console.log("🎉 Seed data created successfully!");
+		console.log("🎉 Consultation seed data created successfully!");
 		process.exit(0);
 	} catch (error) {
 		console.error("❌ Error seeding data:", error);

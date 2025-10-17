@@ -3,6 +3,7 @@ import crypto from "crypto";
 import Chat from "../model/chat.js";
 import mongoose from "mongoose";
 import Forum from "../model/ForumModel.js";
+import CourseSession from "../model/CourseSessionModel.js";
 
 const createRoomId = (userId1, userId2) => {
 	const [a, b] = [userId1, userId2].sort();
