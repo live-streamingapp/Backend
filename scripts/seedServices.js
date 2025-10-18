@@ -1,3 +1,14 @@
+// DEPRECATED: This legacy seeder is disabled. Use exportStaticData/importStaticData instead.
+// To reseed static content:
+// 1) Set MONGO_URI to the source DB and run: npm run export:static (in Server)
+// 2) Switch MONGO_URI to the target DB and run: npm run import:static (in Server)
+if (process.env.ALLOW_LEGACY_SEED !== "true") {
+	console.error(
+		"[DEPRECATED] scripts/seedServices.js is disabled. Use export:static/import:static."
+	);
+	process.exit(1);
+}
+
 import mongoose from "mongoose";
 import Service from "../model/ServiceModel.js";
 import User from "../model/UserModel.js";

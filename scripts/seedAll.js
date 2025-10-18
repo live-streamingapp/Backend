@@ -20,6 +20,13 @@ const runScript = async (scriptName, description) => {
 
 const seedAll = async () => {
 	const startTime = Date.now();
+	// DEPRECATED: This legacy seeder is disabled. Use exportStaticData/importStaticData instead.
+	if (process.env.ALLOW_LEGACY_SEED !== "true") {
+		console.error(
+			"[DEPRECATED] scripts/seedAll.js is disabled. Use export:static/import:static."
+		);
+		process.exit(1);
+	}
 
 	console.log("\n");
 	console.log("╔════════════════════════════════════════════════════════════╗");

@@ -4,8 +4,19 @@ import Order from "../../model/OrderModel.js";
 // Get all customers (users who have made purchases)
 export const getCustomers = async (req, res) => {
 	try {
-		// Find all distinct user IDs from orders
-		const customerIds = await Order.find().distinct("userId");
+		// Find all distinct user IDs from orders, supporting legacy 'userId'
+		const idsFromUser = await Order.find({ user: { $exists: true } }).distinct(
+			"user"
+		);
+		const idsFromUserId = await Order.find({
+			userId: { $exists: true },
+		}).distinct("userId");
+		const customerIds = Array.from(
+			new Set([
+				...idsFromUser.map((v) => String(v)),
+				...idsFromUserId.map((v) => String(v)),
+			])
+		);
 
 		const customers = await User.find({
 			_id: { $in: customerIds },
@@ -36,7 +47,9 @@ export const getCustomerById = async (req, res) => {
 	try {
 		const { id } = req.params;
 
-		const customer = await User.findById(id).select("-password");
+		const customer = await User.findById(id)
+			.select("-password")
+			.populate({ path: "enrolledCourses", select: "title image" });
 
 		if (!customer) {
 			return res.status(404).json({
@@ -46,10 +59,10 @@ export const getCustomerById = async (req, res) => {
 			});
 		}
 
-		// Get customer's orders
-		const orders = await Order.find({ userId: id })
-			.populate("items.courseId")
-			.populate("items.serviceId")
+		// Get customer's orders (support both 'user' and legacy 'userId')
+		const orders = await Order.find({ $or: [{ user: id }, { userId: id }] })
+			// Populate referenced item if needed; primary data is in item snapshot
+			.populate({ path: "user", select: "name email phone" })
 			.sort({ createdAt: -1 });
 
 		res.status(200).json({

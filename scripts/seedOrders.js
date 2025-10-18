@@ -1,3 +1,11 @@
+// DEPRECATED: This legacy seeder is disabled. Use exportStaticData/importStaticData instead.
+if (process.env.ALLOW_LEGACY_SEED !== "true") {
+	console.error(
+		"[DEPRECATED] scripts/seedOrders.js is disabled. Use export:static/import:static."
+	);
+	process.exit(1);
+}
+
 import mongoose from "mongoose";
 import Order from "../model/OrderModel.js";
 import User from "../model/UserModel.js";

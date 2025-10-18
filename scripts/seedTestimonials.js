@@ -1,3 +1,11 @@
+// DEPRECATED: This legacy seeder is disabled. Use exportStaticData/importStaticData instead.
+if (process.env.ALLOW_LEGACY_SEED !== "true") {
+	console.error(
+		"[DEPRECATED] scripts/seedTestimonials.js is disabled. Use export:static/import:static."
+	);
+	process.exit(1);
+}
+
 import mongoose from "mongoose";
 import Testimonial from "../model/TestimonialModel.js";
 import dotenv from "dotenv";

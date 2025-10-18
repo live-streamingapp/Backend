@@ -5,20 +5,14 @@ export const getCustomerOrders = async (req, res) => {
 	try {
 		const { customerId } = req.query;
 
-		const filter = customerId ? { userId: customerId } : {};
+		const filter = customerId
+			? { $or: [{ user: customerId }, { userId: customerId }] }
+			: {};
 
 		const orders = await Order.find(filter)
 			.populate({
-				path: "userId",
+				path: "user",
 				select: "name email phone",
-			})
-			.populate({
-				path: "items.courseId",
-				select: "title price image",
-			})
-			.populate({
-				path: "items.serviceId",
-				select: "title price image",
 			})
 			.sort({ createdAt: -1 });
 

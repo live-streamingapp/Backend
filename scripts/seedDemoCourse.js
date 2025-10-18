@@ -1,4 +1,12 @@
 import "dotenv/config";
+// DEPRECATED: This legacy seeder is disabled. Use exportStaticData/importStaticData instead.
+if (process.env.ALLOW_LEGACY_SEED !== "true") {
+	console.error(
+		"[DEPRECATED] scripts/seedDemoCourse.js is disabled. Use export:static/import:static."
+	);
+	process.exit(1);
+}
+
 import mongoose from "mongoose";
 import connectDB from "../config/db.js";
 import User from "../model/UserModel.js";
