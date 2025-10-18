@@ -15,6 +15,7 @@ import contactRoutes from "./routes/contactRoutes.js";
 import podcastRoutes from "./routes/podcastRoutes.js";
 import instructorRoutes from "./routes/instructorRoutes.js";
 import numerologyRoutes from "./routes/numerologyRoutes.js";
+import kundliRoutes from "./routes/kundliRoutes.js";
 import consultationRoutes from "./routes/consultationRoutes.js";
 import serviceRoutes from "./routes/serviceRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
@@ -34,6 +35,8 @@ import swaggerSpec from "./config/swagger.js";
 // 🆕 Session management routes
 import sessionRoutes from "./routes/sessionRoutes.js";
 import sessionAdminRoutes from "./routes/sessionAdminRoutes.js";
+// 🆕 Payments routes
+import paymentRoutes from "./routes/paymentRoutes.js";
 
 dotenv.config();
 
@@ -41,6 +44,8 @@ const app = express();
 
 app.use(cookieParser());
 app.use(express.json());
+// Parse x-www-form-urlencoded bodies (required for PayU callback posts)
+app.use(express.urlencoded({ extended: true }));
 app.use(
 	cors({
 		origin: [
@@ -89,6 +94,7 @@ app.use("/api/chats", chatRouter);
 app.use("/api/podcasts", podcastRoutes);
 app.use("/api/instructors", instructorRoutes);
 app.use("/api/numerology", numerologyRoutes);
+app.use("/api/kundli", kundliRoutes);
 app.use("/api/consultations", consultationRoutes);
 app.use("/api/services", serviceRoutes);
 app.use("/api/orders", orderRoutes);
@@ -100,6 +106,8 @@ app.use("/api/notifications", notificationRoutes);
 // 🆕 Session routes
 app.use("/api/sessions", sessionRoutes);
 app.use("/api/admin", sessionAdminRoutes);
+// 🆕 Payments
+app.use("/api/payments", paymentRoutes);
 
 const server = http.createServer(app);
 const io = initializeSocket(server);
