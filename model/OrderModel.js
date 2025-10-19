@@ -106,7 +106,7 @@ const orderSchema = new mongoose.Schema(
 		// Payment information
 		paymentMethod: {
 			type: String,
-			enum: ["card", "upi", "netbanking", "wallet", "cod", "pending"],
+			enum: ["card", "upi", "netbanking", "wallet", "cod", "free", "pending"],
 		},
 		paymentStatus: {
 			type: String,

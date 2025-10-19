@@ -37,6 +37,9 @@ const blogSchema = new mongoose.Schema(
 			type: String,
 			required: true,
 		},
+		videoUrl: {
+			type: String,
+		},
 		sections: {
 			type: [sectionSchema],
 		},

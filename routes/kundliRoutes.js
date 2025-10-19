@@ -10,10 +10,11 @@ const ASTROLOGY_API_KEY = process.env.ASTROLOGY_API_KEY;
 // Simple in-memory cache to reduce API calls
 const cache = new Map();
 const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
+const CACHE_VERSION = "v2"; // Increment this to invalidate old cache entries
 
 // Helper function to generate cache key
 const generateCacheKey = (endpoint, data) => {
-	return `${endpoint}_${JSON.stringify(data)}`;
+	return `${CACHE_VERSION}_${endpoint}_${JSON.stringify(data)}`;
 };
 
 // Helper function to get from cache
@@ -156,9 +157,24 @@ kundliRoutes.post("/generate", async (req, res) => {
 				"/horoscope-chart-svg-code",
 				requestBody
 			);
-			console.log("✓ Chart SVG fetched successfully");
+			console.log("✓ Lagna Chart (Rasi) SVG fetched successfully");
 		} catch (error) {
-			console.error("✗ Failed to fetch chart SVG");
+			console.error("✗ Failed to fetch lagna chart SVG");
+			throw error; // Stop here, don't continue
+		}
+
+		await delay(1100); // Wait 1.1 seconds
+
+		// Fetch Navamsa chart (D9) - important divisional chart
+		let navamsaChartSVG;
+		try {
+			navamsaChartSVG = await makeAstrologyAPICall(
+				"/navamsa-chart-svg-code",
+				requestBody
+			);
+			console.log("✓ Navamsa Chart (D9) SVG fetched successfully");
+		} catch (error) {
+			console.error("✗ Failed to fetch navamsa chart SVG");
 			throw error; // Stop here, don't continue
 		}
 
@@ -192,7 +208,8 @@ kundliRoutes.post("/generate", async (req, res) => {
 			success: true,
 			data: {
 				planets: planetsData,
-				chart: chartSVG,
+				lagnaChart: chartSVG, // Lagna/Rasi chart (D1)
+				navamsaChart: navamsaChartSVG, // Navamsa chart (D9)
 				nakshatra: nakshatraData,
 				dasha: dashaData,
 			},
@@ -292,6 +309,17 @@ kundliRoutes.post("/dasha", async (req, res) => {
 			message: error.message || "Failed to fetch dasha details",
 		});
 	}
+});
+
+// GET /api/kundli/clear-cache - Clear the cache (useful for development)
+kundliRoutes.get("/clear-cache", (req, res) => {
+	const cacheSize = cache.size;
+	cache.clear();
+	console.log(`Cleared ${cacheSize} cache entries`);
+	return res.status(200).json({
+		success: true,
+		message: `Cache cleared successfully. Removed ${cacheSize} entries.`,
+	});
 });
 
 export default kundliRoutes;

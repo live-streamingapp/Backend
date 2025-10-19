@@ -25,7 +25,7 @@ const deleteFromCloudinary = async (publicId) => {
 
 export const editBlog = async (req, res) => {
 	try {
-		const { title, tags, author, description, sections } = req.body;
+		const { title, tags, author, description, videoUrl, sections } = req.body;
 
 		// Get existing blog to access old image IDs for cleanup
 		const existingBlog = await Blog.findById(req.params.id);
@@ -38,7 +38,14 @@ export const editBlog = async (req, res) => {
 			});
 		}
 
-		let updatedData = { title, tags, author, description };
+		// Build update data object - only include fields that are provided
+		let updatedData = {};
+
+		if (title !== undefined) updatedData.title = title;
+		if (description !== undefined) updatedData.description = description;
+		if (author !== undefined) updatedData.author = author;
+		if (tags !== undefined) updatedData.tags = tags;
+		if (videoUrl !== undefined) updatedData.videoUrl = videoUrl;
 
 		// Update main image if uploaded
 		if (req.files?.mainImage?.[0]?.buffer) {

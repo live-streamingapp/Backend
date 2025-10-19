@@ -3,10 +3,12 @@ import Order from "../../model/OrderModel.js";
 import Cart from "../../model/CartModel.js";
 import User from "../../model/UserModel.js";
 
-// PayU environment configuration from .env
-const PAYU_KEY = process.env.PAYU_MERCHANT_KEY || "";
-const PAYU_SALT = process.env.PAYU_MERCHANT_SALT || "";
-const PAYU_BASE_URL = process.env.PAYU_BASE_URL || "https://test.payu.in"; // sandbox by default
+// PayU environment configuration from .env (trim to remove any accidental whitespace)
+const PAYU_KEY = (process.env.PAYU_MERCHANT_KEY || "").trim();
+const PAYU_SALT = (process.env.PAYU_MERCHANT_SALT || "").trim();
+const PAYU_BASE_URL = (
+	process.env.PAYU_BASE_URL || "https://test.payu.in"
+).trim(); // sandbox by default
 const PAYU_SUCCESS_URL =
 	process.env.PAYU_SUCCESS_URL ||
 	`${process.env.API_URL}/api/payments/payu/callback`;
@@ -103,7 +105,7 @@ export const initiatePayU = async (req, res) => {
 	try {
 		const userId = req.user._id;
 
-		// Step 0: Env guard + log
+		// Step 0: Env guard + log with actual values (masked)
 		if (!PAYU_KEY || !PAYU_SALT) {
 			console.error(
 				"[PayU][initiate][error] Missing PAYU_MERCHANT_KEY or PAYU_MERCHANT_SALT"
@@ -113,6 +115,16 @@ export const initiatePayU = async (req, res) => {
 				message: "Payment gateway not configured. Please contact support.",
 			});
 		}
+
+		// Debug log to verify configuration
+		console.log("[PayU][initiate][config]", {
+			keyLength: PAYU_KEY?.length,
+			saltLength: PAYU_SALT?.length,
+			baseUrl: PAYU_BASE_URL,
+			keyPrefix: PAYU_KEY?.substring(0, 2) + "***",
+			saltPrefix: PAYU_SALT?.substring(0, 2) + "***",
+		});
+
 		console.log("[PayU][initiate][start]", { userId: String(userId) });
 
 		// Ensure cart-only purchase: load cart for this user
@@ -155,11 +167,75 @@ export const initiatePayU = async (req, res) => {
 			};
 		});
 
-		if (!totalAmount || totalAmount <= 0) {
+		if (totalAmount < 0) {
 			return res
 				.status(400)
 				.json({ success: false, message: "Invalid cart total." });
 		}
+
+		// Handle free courses (zero amount) - skip payment gateway and create order directly
+		if (totalAmount === 0) {
+			console.log("[PayU][initiate][free-order]", { totalAmount: 0 });
+
+			// Create order directly as paid since it's free
+			const order = await Order.create({
+				user: userId,
+				items: orderItems,
+				totalAmount: 0,
+				paymentMethod: "free",
+				paymentStatus: "paid",
+				status: "accepted",
+				paidAt: new Date(),
+				transactionId: `FREE_${Date.now()}`,
+				statusHistory: [
+					{ status: "pending", updatedBy: userId, timestamp: new Date() },
+					{ status: "accepted", timestamp: new Date(), notes: "Free course" },
+				],
+			});
+
+			// Clear user's cart
+			await Cart.findOneAndUpdate({ userId }, { items: [] });
+
+			// Enroll courses from this order
+			try {
+				const user = await User.findById(userId);
+				if (user) {
+					const courseItems = (order.items || []).filter(
+						(i) => i.itemType === "course"
+					);
+					const courseIds = courseItems.map((i) => String(i.itemId));
+					const existing = new Set(
+						(user.enrolledCourses || []).map((id) => String(id))
+					);
+					const toAdd = courseIds.filter((id) => !existing.has(id));
+					if (toAdd.length) {
+						user.enrolledCourses.push(...toAdd);
+						await user.save();
+					}
+				}
+			} catch (e) {
+				console.error("Enrollment for free order failed", e);
+			}
+
+			console.log("[PayU][initiate][free-order-created]", {
+				orderId: String(order._id),
+				orderNumber: order.orderNumber,
+			});
+
+			// Return success with order details (no payment gateway needed)
+			return res.status(200).json({
+				success: true,
+				free: true,
+				order: {
+					_id: order._id,
+					orderNumber: order.orderNumber,
+					totalAmount: 0,
+					paymentStatus: "paid",
+					status: "accepted",
+				},
+			});
+		}
+
 		console.log("[PayU][initiate][cart-total]", {
 			totalAmount: Number(totalAmount.toFixed(2)),
 		});
@@ -232,6 +308,18 @@ export const initiatePayU = async (req, res) => {
 			length: hash?.length,
 		});
 
+		// Debug: Log the hash generation details
+		console.log("[PayU][initiate][hash-debug]", {
+			key: PAYU_KEY?.substring(0, 3) + "***",
+			salt: PAYU_SALT?.substring(0, 3) + "***",
+			txnid,
+			amount,
+			productinfo: productinfo?.substring(0, 20) + "...",
+			firstname: fields.firstname?.substring(0, 3) + "***",
+			email: fields.email?.substring(0, 3) + "***",
+			hashPreview: hash?.substring(0, 10) + "...",
+		});
+
 		// Optional: clear cart now or after successful payment; we keep it until paid to be safe
 		// await Cart.findOneAndUpdate({ userId }, { items: [] });
 
@@ -255,6 +343,7 @@ export const initiatePayU = async (req, res) => {
 		console.log("[PayU][initiate][sent]", {
 			orderId: String(order._id),
 			txnid,
+			paymentUrl: `${PAYU_BASE_URL}/_payment`,
 		});
 		res.status(200).json({
 			success: true,

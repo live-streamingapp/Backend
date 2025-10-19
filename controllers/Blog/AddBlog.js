@@ -15,13 +15,14 @@ const uploadToCloudinary = async (fileBuffer, folder) => {
 
 export const addBlog = async (req, res) => {
 	try {
-		const { title, tags, author, date, description, sections } = req.body;
+		const { title, tags, author, date, description, videoUrl, sections } =
+			req.body;
 
-		if (!title || !author || !description) {
+		if (!title || !description) {
 			return res.status(400).json({
 				status: false,
 				code: 400,
-				message: "Title, author, and description are required",
+				message: "Title and description are required",
 				data: null,
 			});
 		}
@@ -93,6 +94,7 @@ export const addBlog = async (req, res) => {
 			mainImage,
 			cloudinary_main_image_id,
 			description,
+			videoUrl,
 			sections: parsedSections,
 		});
 
