@@ -3,6 +3,7 @@ import upload from "../middlewares/upload.js";
 import { createCourse } from "../controllers/Course/CreateCourse.js";
 import { getCourseById, getCourses } from "../controllers/Course/GetCourses.js";
 import { getEnrolledCourses } from "../controllers/Course/GetEnrolledCourses.js";
+import { getStudentCourseProgress } from "../controllers/Course/GetStudentProgress.js";
 import { editCourse } from "../controllers/Course/EditCourse.js";
 import { deleteCourse } from "../controllers/Course/DeleteCourse.js";
 import { adminMiddleware } from "../middlewares/adminAuthMiddleware.js";
@@ -107,13 +108,13 @@ const router = Router();
  *                     $ref: '#/components/schemas/Course'
  */
 router.post(
-  "/",
-  adminMiddleware,
-  upload.fields([
-    { name: "image", maxCount: 1 },
-    { name: "videos", maxCount: 20 },
-  ]),
-  createCourse
+	"/",
+	adminMiddleware,
+	upload.fields([
+		{ name: "image", maxCount: 1 },
+		{ name: "videos", maxCount: 20 },
+	]),
+	createCourse
 );
 
 router.get("/", getCourses);
@@ -146,6 +147,32 @@ router.get("/", getCourses);
  *         description: Unauthorized
  */
 router.get("/enrolled", authMiddleware, getEnrolledCourses);
+
+/**
+ * @swagger
+ * /api/courses/progress/{courseId}:
+ *   get:
+ *     tags: [Courses]
+ *     summary: Get student progress for a course
+ *     description: Get progress details for the authenticated student in a specific course
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: courseId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Course ID
+ *     responses:
+ *       200:
+ *         description: Course progress retrieved successfully
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Progress not found
+ */
+router.get("/progress/:courseId", authMiddleware, getStudentCourseProgress);
 
 /**
  * @swagger
@@ -241,8 +268,8 @@ router.get("/enrolled", authMiddleware, getEnrolledCourses);
 router.get("/:id", getCourseById);
 
 const uploadCourseAssets = upload.fields([
-  { name: "image", maxCount: 1 },
-  { name: "videos", maxCount: 20 },
+	{ name: "image", maxCount: 1 },
+	{ name: "videos", maxCount: 20 },
 ]);
 
 router.put("/edit/:id", adminMiddleware, uploadCourseAssets, editCourse);

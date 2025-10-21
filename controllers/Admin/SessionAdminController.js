@@ -89,13 +89,9 @@ export const createSession = async (req, res) => {
 			}
 		);
 
-		const populatedSession = await CourseSession.findById(session._id)
-			.populate("course", "title")
-			.populate("instructor", "name email avatar");
-
-		// Send notifications to enrolled students
+		// Send notifications to enrolled students (before population to keep course as ID)
 		try {
-			await notifySessionCreated(populatedSession);
+			await notifySessionCreated(session);
 		} catch (notificationError) {
 			console.error(
 				"Error sending session creation notifications:",
@@ -103,6 +99,10 @@ export const createSession = async (req, res) => {
 			);
 			// Don't fail the request if notifications fail
 		}
+
+		const populatedSession = await CourseSession.findById(session._id)
+			.populate("course", "title")
+			.populate("instructor", "name email avatar");
 
 		res.status(201).json({
 			success: true,
@@ -198,14 +198,10 @@ export const updateSession = async (req, res) => {
 		session.lastModifiedBy = req.user._id;
 		await session.save();
 
-		const populatedSession = await CourseSession.findById(session._id)
-			.populate("course", "title")
-			.populate("instructor", "name email avatar");
-
-		// Send notifications if there were significant changes
+		// Send notifications if there were significant changes (before population to keep course as ID)
 		if (Object.keys(changes).length > 0) {
 			try {
-				await notifySessionUpdated(populatedSession, changes);
+				await notifySessionUpdated(session, changes);
 			} catch (notificationError) {
 				console.error(
 					"Error sending session update notifications:",
@@ -214,6 +210,10 @@ export const updateSession = async (req, res) => {
 				// Don't fail the request if notifications fail
 			}
 		}
+
+		const populatedSession = await CourseSession.findById(session._id)
+			.populate("course", "title")
+			.populate("instructor", "name email avatar");
 
 		res.status(200).json({
 			success: true,
@@ -235,9 +235,7 @@ export const startSession = async (req, res) => {
 	try {
 		const { sessionId } = req.params;
 
-		const session = await CourseSession.findById(sessionId)
-			.populate("course", "title")
-			.populate("instructor", "name email avatar");
+		const session = await CourseSession.findById(sessionId);
 
 		if (!session) {
 			return res.status(404).json({
@@ -477,9 +475,7 @@ export const uploadSessionRecording = async (req, res) => {
 			downloadable = false,
 		} = req.body;
 
-		const session = await CourseSession.findById(sessionId)
-			.populate("course", "title")
-			.populate("instructor", "name email avatar");
+		const session = await CourseSession.findById(sessionId);
 
 		if (!session) {
 			return res.status(404).json({
@@ -533,12 +529,16 @@ export const uploadSessionRecording = async (req, res) => {
 			}
 		}
 
+		// Populate for response
+		const populatedSession = await CourseSession.findById(session._id)
+			.populate("course", "title")
+			.populate("instructor", "name email avatar");
+
 		res.status(200).json({
 			success: true,
 			message: "Session recording URL added successfully",
 			data: {
-				sessionId: session._id,
-				recording: session.recording,
+				session: populatedSession,
 				notificationSent: session.status === "completed",
 			},
 		});
@@ -667,9 +667,7 @@ export const deleteSession = async (req, res) => {
 		const { sessionId } = req.params;
 		const { reason } = req.body || {}; // Optional cancellation reason
 
-		const session = await CourseSession.findById(sessionId)
-			.populate("course", "title")
-			.populate("instructor", "name email avatar");
+		const session = await CourseSession.findById(sessionId);
 
 		if (!session) {
 			return res.status(404).json({
@@ -686,7 +684,7 @@ export const deleteSession = async (req, res) => {
 			});
 		}
 
-		// If session is scheduled, send cancellation notifications
+		// If session is scheduled, send cancellation notifications (before population)
 		if (session.status === "scheduled") {
 			try {
 				await notifySessionCancelled(session, reason);

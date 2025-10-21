@@ -1,5 +1,6 @@
 import Order from "../../model/OrderModel.js";
 import User from "../../model/UserModel.js";
+import { notifyOrderStatusChange } from "../Notification/OrderNotifications.js";
 
 export const updateOrderStatus = async (req, res) => {
 	try {
@@ -35,6 +36,8 @@ export const updateOrderStatus = async (req, res) => {
 			});
 		}
 
+		const oldStatus = order.status;
+
 		if (status) {
 			order.statusHistory.push({
 				status,
@@ -53,6 +56,19 @@ export const updateOrderStatus = async (req, res) => {
 
 		Object.assign(order, updateData);
 		await order.save();
+
+		// Send notification to user about status change
+		if (status && status !== oldStatus) {
+			try {
+				await notifyOrderStatusChange(order, oldStatus, status);
+			} catch (notificationError) {
+				console.error(
+					"Error sending order status notification:",
+					notificationError
+				);
+				// Don't fail the request if notification fails
+			}
+		}
 
 		res.status(200).json({
 			success: true,

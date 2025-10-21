@@ -4,6 +4,10 @@ import Course from "../../model/CourseModel.js";
 import Book from "../../model/BookModel.js";
 import Consultation from "../../model/ConsultationModel.js";
 import Service from "../../model/ServiceModel.js";
+import {
+	notifyAdminNewOrder,
+	notifyAdminNewBooking,
+} from "../Notification/OrderNotifications.js";
 
 export const createOrder = async (req, res) => {
 	try {
@@ -130,6 +134,22 @@ export const createOrder = async (req, res) => {
 		// Clear cart if items are from cart
 		if (req.body.clearCart) {
 			await Cart.findOneAndUpdate({ userId }, { items: [] });
+		}
+
+		// Send notifications to admins about new order
+		try {
+			// Check if order contains consultation bookings
+			const hasConsultations = order.items.some(
+				(item) => item.itemType === "package"
+			);
+			if (hasConsultations) {
+				await notifyAdminNewBooking(order);
+			} else {
+				await notifyAdminNewOrder(order);
+			}
+		} catch (notificationError) {
+			console.error("Error sending order notifications:", notificationError);
+			// Don't fail the request if notification fails
 		}
 
 		res.status(201).json({

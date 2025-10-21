@@ -1,10 +1,23 @@
 import Notification from "../../model/NotificationModel.js";
+import mongoose from "mongoose";
 
 // Mark notification as read
 export const markAsRead = async (req, res) => {
 	try {
+		const { id } = req.params;
+
+		// Validate ObjectId
+		if (!mongoose.Types.ObjectId.isValid(id)) {
+			return res.status(400).json({
+				status: false,
+				code: 400,
+				message: "Invalid notification ID format",
+				data: null,
+			});
+		}
+
 		const notification = await Notification.findByIdAndUpdate(
-			req.params.id,
+			id,
 			{ isRead: true },
 			{ new: true }
 		);
